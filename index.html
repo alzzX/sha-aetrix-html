@@ -1,0 +1,1856 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SHA256 Keys Generator — Cryptographic Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #05070a;
+            --bg-chassis: rgba(12, 16, 23, 0.86);
+            --bg-panel: rgba(16, 21, 30, 0.92);
+            --bg-elevated: #151c28;
+            --bg-input: #0a0e14;
+            --border-dim: rgba(255, 255, 255, 0.07);
+            --border-mid: rgba(255, 255, 255, 0.13);
+            --border-bright: rgba(56, 189, 248, 0.45);
+            --text-main: #edf2f7;
+            --text-muted: #8b9bb4;
+            --text-dim: #526077;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.18);
+            --emerald: #10b981;
+            --emerald-dim: rgba(16, 185, 129, 0.14);
+            --amber: #f59e0b;
+            --danger: #f43f5e;
+            --danger-dim: rgba(244, 63, 94, 0.14);
+            --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            background: var(--bg-void);
+            color: var(--text-main);
+            font-family: var(--sans);
+            font-size: 15px;
+            line-height: 1.5;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .sr {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        button,
+        input {
+            font: inherit;
+            color: inherit;
+        }
+
+        /* ---------- 3D GALAXY CANVAS & INTRO STAGE ---------- */
+
+        #galaxyCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+            transition: opacity 0.9s var(--ease-out), filter 0.9s var(--ease-out);
+        }
+
+        body.is-docked #galaxyCanvas {
+            opacity: 0.28;
+            filter: blur(2px);
+        }
+
+        .intro-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 36px 24px 44px;
+            pointer-events: none;
+            transition: opacity 0.65s var(--ease-out), transform 0.85s var(--ease-out), visibility 0.65s;
+        }
+
+        body.is-docked .intro-overlay {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(1.18) translateZ(120px);
+        }
+
+        .intro-top {
+            width: 100%;
+            max-width: 1160px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid var(--border-mid);
+            border-radius: 999px;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--emerald);
+            box-shadow: 0 0 10px var(--emerald);
+        }
+
+        .intro-center {
+            text-align: center;
+            max-width: 680px;
+            padding: 0 16px;
+        }
+
+        .intro-tag {
+            display: inline-block;
+            margin-bottom: 16px;
+            padding: 4px 12px;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 4px;
+        }
+
+        .intro-title {
+            margin: 0 0 16px;
+            font-size: clamp(2.4rem, 6vw, 4.4rem);
+            font-weight: 700;
+            letter-spacing: -0.035em;
+            line-height: 1.04;
+            background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .intro-sub {
+            margin: 0 auto;
+            max-width: 48ch;
+            color: var(--text-muted);
+            font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+        }
+
+        .scroll- cue-wrap {
+            pointer-events: auto;
+        }
+
+        .scroll-trigger {
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-mid);
+            color: var(--text-main);
+            padding: 12px 22px;
+            border-radius: 999px;
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            transition: border-color 0.25s, background-color 0.25s, transform 0.25s;
+        }
+
+        .scroll-trigger:hover {
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .mouse-icon {
+            width: 16px;
+            height: 24px;
+            border: 1.5px solid var(--text-muted);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .mouse-icon::after {
+            content: "";
+            position: absolute;
+            top: 4px;
+            left: 50%;
+            width: 2px;
+            height: 5px;
+            margin-left: -1px;
+            background: var(--accent);
+            border-radius: 2px;
+            animation: scrollWheel 1.6s infinite;
+        }
+
+        @keyframes scrollWheel {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(8px);
+                opacity: 0;
+            }
+        }
+
+        /* ---------- 3D ASSEMBLY WORKSPACE (TERMINAL UPGRADE) ---------- */
+
+        .workspace-stage {
+            position: relative;
+            z-index: 5;
+            min-height: 100vh;
+            padding: 36px 20px 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1600px;
+            pointer-events: none;
+        }
+
+        body.is-docked .workspace-stage {
+            pointer-events: auto;
+        }
+
+        .terminal-deck {
+            width: 100%;
+            max-width: 1160px;
+            display: grid;
+            grid-template-columns: minmax(0, 5.2fr) minmax(0, 6.8fr);
+            grid-template-areas:
+                "topbar topbar"
+                "left   right"
+                "footer footer";
+            gap: 16px;
+            transform-style: preserve-3d;
+        }
+
+        /* Base 3D scattered state before convergence */
+        .module-bay {
+            background: var(--bg-chassis);
+            border: 1px solid var(--border-dim);
+            border-radius: 10px;
+            box-shadow:
+                0 24px 60px rgba(0, 0, 0, 0.65),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            transition:
+                transform 1.05s var(--ease-out),
+                opacity 0.85s var(--ease-out),
+                border-color 0.4s ease,
+                box-shadow 0.6s ease;
+            will-change: transform, opacity;
+        }
+
+        /* Scattered vectors ("muncul dari mana saja") */
+        .bay-topbar {
+            grid-area: topbar;
+            transform: translate3d(0, -160px, 260px) rotateX(42deg) scale(0.88);
+            transition-delay: 0.02s;
+        }
+
+        .bay-left {
+            grid-area: left;
+            transform: translate3d(-260px, 50px, -320px) rotateY(36deg) rotateZ(-4deg) scale(0.82);
+            transition-delay: 0.08s;
+        }
+
+        .bay-right {
+            grid-area: right;
+            transform: translate3d(260px, 70px, -320px) rotateY(-36deg) rotateZ(4deg) scale(0.82);
+            transition-delay: 0.14s;
+        }
+
+        .bay-footer {
+            grid-area: footer;
+            transform: translate3d(0, 180px, 220px) rotateX(-38deg) scale(0.9);
+            transition-delay: 0.2s;
+        }
+
+        /* Converged / Docked state ("dan menyatu") */
+        body.is-docked .module-bay {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) rotateX(0) rotateY(0) rotateZ(0) scale(1);
+        }
+
+        body.is-docked .module-bay:hover {
+            border-color: var(--border-mid);
+        }
+
+        /* ---------- TOP TELEMETRY BAR ---------- */
+
+        .bay-topbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 18px;
+        }
+
+        .term-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .term-dots {
+            display: flex;
+            gap: 7px;
+        }
+
+        .term-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #263042;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .term-dots span:nth-child(1) {
+            background: #e11d48;
+        }
+
+        .term-dots span:nth-child(2) {
+            background: #f59e0b;
+        }
+
+        .term-dots span:nth-child(3) {
+            background: #10b981;
+        }
+
+        .term-path {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .term-path code {
+            color: var(--accent);
+            font-weight: 500;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+
+        .term-meta {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .engine-badge {
+            padding: 3px 9px;
+            border-radius: 4px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            color: var(--emerald);
+        }
+
+        .btn-space {
+            background: transparent;
+            border: 1px solid var(--border-mid);
+            color: var(--text-muted);
+            padding: 5px 11px;
+            border-radius: 5px;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            cursor: pointer;
+            transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+        }
+
+        .btn-space:hover {
+            color: var(--text-main);
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        /* ---------- PANEL HEADERS ---------- */
+
+        .panel-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 20px;
+            border-bottom: 1px solid var(--border-dim);
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        .panel-title {
+            margin: 0;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-title::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 1px;
+            background: var(--accent);
+        }
+
+        .panel-id {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .panel-content {
+            padding: 22px 20px;
+        }
+
+        /* ---------- LEFT BAY: INGESTION & KEY ---------- */
+
+        h1.console-heading {
+            margin: 0 0 6px;
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .lead {
+            margin: 0 0 22px;
+            color: var(--text-muted);
+            font-size: 13.8px;
+        }
+
+        .lead code {
+            font-family: var(--mono);
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .dropzone {
+            position: relative;
+            display: block;
+            padding: 26px 18px;
+            background: var(--bg-input);
+            border: 1.5px dashed rgba(139, 155, 180, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .dropzone:hover {
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.04);
+        }
+
+        .dropzone:focus-within {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .dropzone.is-over {
+            border-color: var(--emerald);
+            border-style: solid;
+            background: var(--emerald-dim);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+        }
+
+        .dropzone-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-mid);
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .dropzone strong {
+            display: block;
+            font-size: 14.5px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 3px;
+        }
+
+        .dropzone span {
+            color: var(--text-muted);
+            font-size: 12.5px;
+            font-family: var(--mono);
+        }
+
+        .file-list {
+            list-style: none;
+            margin: 14px 0 0;
+            padding: 0;
+            display: grid;
+            gap: 6px;
+        }
+
+        .file-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 12.5px;
+        }
+
+        .file-name {
+            flex: 1;
+            min-width: 0;
+            overflow-wrap: anywhere;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .file-size {
+            color: var(--text-muted);
+            font-size: 11.5px;
+            white-space: nowrap;
+            padding: 2px 6px;
+            background: var(--bg-elevated);
+            border-radius: 4px;
+        }
+
+        .field {
+            margin-top: 22px;
+        }
+
+        .field label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 7px;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+
+        .field-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .field input {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 13px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-mid);
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 13.5px;
+            color: var(--text-main);
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .field input:focus-visible {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .hint {
+            margin: 6px 0 0;
+            font-size: 12px;
+            color: var(--text-dim);
+            font-family: var(--mono);
+        }
+
+        /* ---------- BUTTONS ---------- */
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.2;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn:focus-visible,
+        .link-btn:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #041019;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+        }
+
+        .btn-primary:hover {
+            background: #7dd3fc;
+            box-shadow: 0 0 28px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #334155;
+            color: #94a3b8;
+            box-shadow: none;
+            cursor: progress;
+        }
+
+        .btn-secondary {
+            background: var(--bg-elevated);
+            border-color: var(--border-mid);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-quiet {
+            padding: 10px 14px;
+            background: transparent;
+            color: var(--text-muted);
+            border-color: transparent;
+        }
+
+        .btn-quiet:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .link-btn {
+            padding: 3px 8px;
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.22);
+            border-radius: 4px;
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 11.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .link-btn:hover {
+            background: rgba(56, 189, 248, 0.18);
+            border-color: var(--accent);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        /* ---------- PIPELINE STEPS & MESSAGES ---------- */
+
+        .message {
+            margin: 16px 0 0;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 12.5px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+
+        .message.is-error {
+            background: var(--danger-dim);
+            border-color: rgba(244, 63, 94, 0.35);
+            color: #fda4af;
+        }
+
+        .steps {
+            list-style: none;
+            margin: 16px 0 0;
+            padding: 12px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px 12px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .steps li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .steps li::before {
+            content: "";
+            flex: none;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 1px solid var(--border-mid);
+        }
+
+        .steps li[data-state="active"] {
+            color: var(--accent);
+        }
+
+        .steps li[data-state="active"]::before {
+            background: transparent;
+            border: 2px solid var(--accent);
+            border-top-color: transparent;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .steps li[data-state="done"] {
+            color: var(--emerald);
+        }
+
+        .steps li[data-state="done"]::before {
+            background: var(--emerald);
+            border-color: var(--emerald);
+            box-shadow: 0 0 8px var(--emerald);
+        }
+
+        .steps li[data-state="error"] {
+            color: var(--danger);
+        }
+
+        .steps li[data-state="error"]::before {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ---------- RIGHT BAY: MANIFEST INSPECTOR ---------- */
+
+        .slip {
+            background: var(--bg-input);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .slip-head {
+            padding: 16px 18px;
+            border-bottom: 1px dashed var(--border-mid);
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .slip-head h2 {
+            margin: 0;
+            font-family: var(--mono);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .slip-meta {
+            margin: 0;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--emerald);
+        }
+
+        .slip-empty .slip-meta {
+            color: var(--text-dim);
+        }
+
+        .slip-body {
+            padding: 6px 18px 18px;
+        }
+
+        .entry {
+            padding: 13px 0;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .entry:last-child {
+            border-bottom: 0;
+        }
+
+        .entry-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .entry-name {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            overflow-wrap: anywhere;
+        }
+
+        .entry-name.is-key-sig {
+            color: var(--amber);
+        }
+
+        .hash {
+            display: block;
+            margin-top: 6px;
+            font-family: var(--mono);
+            font-size: 12.5px;
+            line-height: 1.65;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+            user-select: all;
+        }
+
+        .slip-empty .slip-body {
+            padding: 22px 18px 26px;
+        }
+
+        .slip-empty p {
+            margin: 0 0 18px;
+            color: var(--text-muted);
+            font-size: 13.5px;
+            max-width: 44ch;
+        }
+
+        .ghost {
+            display: block;
+            height: 9px;
+            margin-top: 10px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 100%);
+        }
+
+        .ghost:nth-of-type(1) {
+            width: 58%;
+        }
+
+        .ghost:nth-of-type(2) {
+            width: 88%;
+        }
+
+        .ghost:nth-of-type(3) {
+            width: 42%;
+        }
+
+        .json-view {
+            margin-top: 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            padding: 10px 14px;
+        }
+
+        .json-view summary {
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .json-view summary:hover {
+            color: var(--text-main);
+        }
+
+        .json-view pre {
+            margin: 10px 0 2px;
+            padding: 12px;
+            max-height: 240px;
+            overflow: auto;
+            background: #06080c;
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            font-family: var(--mono);
+            font-size: 12px;
+            line-height: 1.6;
+            color: #a5f3fc;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        /* ---------- BOTTOM BAY: LIVE KERNEL LOG & PRIVACY ---------- */
+
+        .bay-footer {
+            padding: 12px 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        .kernel-stream {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            min-width: 0;
+        }
+
+        .kernel-prompt {
+            color: var(--emerald);
+            font-weight: 600;
+        }
+
+        .kernel-text {
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .privacy {
+            margin: 0;
+            font-size: 11.5px;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 900px) {
+            .terminal-deck {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-areas:
+                    "topbar"
+                    "left"
+                    "right"
+                    "footer";
+            }
+
+            .workspace-stage {
+                padding: 20px 12px 48px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .module-bay,
+            .intro-overlay,
+            #galaxyCanvas {
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 3D GALAXY CANVAS -->
+    <canvas id="galaxyCanvas" aria-hidden="true"></canvas>
+
+    <!-- STAGE 1: GALAXY OPENING SCREEN -->
+    <aside class="intro-overlay" id="introOverlay" aria-label="Layar Pembuka Galaksi">
+        <div class="intro-top">
+            <span class="status-pill">
+                <span class="status-dot"></span>
+                SYS.CRYPTO // READY
+            </span>
+            <span>DOUBLE-SHA256 + HMAC-SHA256</span>
+        </div>
+
+        <div class="intro-center">
+            <span class="intro-tag">Cryptographic Manifest Console</span>
+            <h2 class="intro-title">SHA256 Keys Generator</h2>
+            <p class="intro-sub">Gulir ke bawah untuk menyatukan modul terminal dan memproses tanda tangan integritas file JavaScript secara lokal.</p>
+        </div>
+
+        <button class="scroll-trigger" id="enterTerminalBtn" type="button">
+            <span class="mouse-icon" aria-hidden="true"></span>
+            <span>Gulir ke Bawah / Buka Terminal</span>
+        </button>
+    </aside>
+
+    <!-- STAGE 2: CONVERGING 3D TERMINAL WORKSPACE -->
+    <main class="workspace-stage" id="workspaceStage">
+        <div class="terminal-deck">
+
+            <!-- MODULE 1: TELEMETRY TOPBAR -->
+            <header class="module-bay bay-topbar">
+                <div class="term-brand">
+                    <div class="term-dots" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="term-path">
+                        <span>root@crypto-deck:~/manifest</span>
+                        <code>.datakeys</code>
+                    </div>
+                </div>
+                <div class="term-meta">
+                    <span class="engine-badge" id="engineBadge">WEBCRYPTO::NATIVE</span>
+                    <button class="btn-space" id="backToGalaxyBtn" type="button" title="Kembali ke tampilan galaksi">Orbit View [ESC]</button>
+                </div>
+            </header>
+
+            <!-- MODULE 2: LEFT INGESTION & KEY BAY -->
+            <section class="module-bay bay-left" aria-labelledby="judul">
+                <div class="panel-bar">
+                    <h2 class="panel-title">Input Buffer &amp; Secret Key</h2>
+                    <span class="panel-id">MOD // 01</span>
+                </div>
+
+                <div class="panel-content">
+                    <h1 class="console-heading" id="judul">SHA256 Keys Generator</h1>
+                    <p class="lead">Hitung hash file JavaScript, tandatangani dengan kunci rahasia, lalu unduh hasilnya sebagai file <code>.datakeys</code>.</p>
+
+                    <label class="dropzone" id="dropzone">
+                        <input class="sr" id="picker" type="file" accept=".js,.mjs,.cjs" multiple>
+                        <span class="dropzone-icon" aria-hidden="true">JS</span>
+                        <strong>Pilih file JavaScript</strong>
+                        <span>atau tarik ke sini. Format .js, .mjs, .cjs; boleh lebih dari satu.</span>
+                    </label>
+                    <ul class="file-list" id="fileList" aria-label="File yang dipilih"></ul>
+
+                    <div class="field">
+                        <label for="secret">
+                            <span>Kunci rahasia (HMAC Key)</span>
+                        </label>
+                        <div class="field-row">
+                            <input id="secret" type="password" autocomplete="off" spellcheck="false" placeholder="••••••••••••••••">
+                            <button class="btn btn-secondary" id="toggleSecret" type="button" aria-pressed="false">Tampilkan</button>
+                        </div>
+                        <p class="hint">Kosongkan untuk memakai kunci bawaan.</p>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn btn-primary" id="generate" type="button">Buat .datakeys</button>
+                        <button class="btn btn-quiet" id="reset" type="button">Reset</button>
+                    </div>
+
+                    <p class="message" id="message" role="status" hidden></p>
+                    <ol class="steps" id="steps" hidden>
+                        <li data-step="read" data-state="pending">Membaca file</li>
+                        <li data-step="hash" data-state="pending">Menghitung SHA-256</li>
+                        <li data-step="double" data-state="pending">Membuat hash ganda</li>
+                        <li data-step="sign" data-state="pending">Menandatangani manifest</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- MODULE 3: RIGHT MANIFEST OUTPUT BAY -->
+            <section class="module-bay bay-right" aria-live="polite" aria-label="Hasil">
+                <div class="panel-bar">
+                    <h2 class="panel-title">Signed Output Manifest</h2>
+                    <span class="panel-id">MOD // 02</span>
+                </div>
+                <div class="panel-content" id="result"></div>
+            </section>
+
+            <!-- MODULE 4: BOTTOM KERNEL STREAM -->
+            <footer class="module-bay bay-footer">
+                <div class="kernel-stream">
+                    <span class="kernel-prompt">stdout &gt;</span>
+                    <span class="kernel-text" id="kernelLog">Menunggu antrean file JavaScript untuk dihitung...</span>
+                </div>
+                <p class="privacy">Semua dihitung di browser kamu. File dan kunci tidak dikirim ke mana pun.</p>
+            </footer>
+
+        </div>
+    </main>
+
+    <script>
+        'use strict';
+
+        /* crypto-core:start */
+        const DEFAULT_SECRET = 'ziee123456789';
+
+        const K256 = new Uint32Array([
+            0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+            0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+            0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+            0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+            0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+            0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+            0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+            0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+        ]);
+
+        function rotr(x, n) {
+            return (x >>> n) | (x << (32 - n));
+        }
+
+        // Cadangan untuk halaman yang dibuka lewat http biasa, tempat crypto.subtle tidak tersedia.
+        function sha256Fallback(data) {
+            const len = data.length;
+            const total = Math.ceil((len + 9) / 64) * 64;
+            const buf = new Uint8Array(total);
+            buf.set(data);
+            buf[len] = 0x80;
+            const view = new DataView(buf.buffer);
+            view.setUint32(total - 8, Math.floor(len / 0x20000000));
+            view.setUint32(total - 4, (len << 3) >>> 0);
+
+            const h = new Uint32Array([
+                0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+            ]);
+            const w = new Uint32Array(64);
+
+            for (let off = 0; off < total; off += 64) {
+                for (let i = 0; i < 16; i++) w[i] = view.getUint32(off + i * 4);
+                for (let i = 16; i < 64; i++) {
+                    const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+                    const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+                    w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+                }
+                let a = h[0],
+                    b = h[1],
+                    c = h[2],
+                    d = h[3],
+                    e = h[4],
+                    f = h[5],
+                    g = h[6],
+                    k = h[7];
+                for (let i = 0; i < 64; i++) {
+                    const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+                    const ch = (e & f) ^ (~e & g);
+                    const t1 = (k + S1 + ch + K256[i] + w[i]) | 0;
+                    const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+                    const maj = (a & b) ^ (a & c) ^ (b & c);
+                    const t2 = (S0 + maj) | 0;
+                    k = g;
+                    g = f;
+                    f = e;
+                    e = (d + t1) | 0;
+                    d = c;
+                    c = b;
+                    b = a;
+                    a = (t1 + t2) | 0;
+                }
+                h[0] = (h[0] + a) | 0;
+                h[1] = (h[1] + b) | 0;
+                h[2] = (h[2] + c) | 0;
+                h[3] = (h[3] + d) | 0;
+                h[4] = (h[4] + e) | 0;
+                h[5] = (h[5] + f) | 0;
+                h[6] = (h[6] + g) | 0;
+                h[7] = (h[7] + k) | 0;
+            }
+
+            const out = new Uint8Array(32);
+            const outView = new DataView(out.buffer);
+            for (let i = 0; i < 8; i++) outView.setUint32(i * 4, h[i]);
+            return out;
+        }
+
+        function hmacFallback(keyBytes, msgBytes) {
+            let key = keyBytes;
+            if (key.length > 64) key = sha256Fallback(key);
+            const ipad = new Uint8Array(64 + msgBytes.length);
+            const opad = new Uint8Array(64 + 32);
+            for (let i = 0; i < 64; i++) {
+                const kb = i < key.length ? key[i] : 0;
+                ipad[i] = kb ^ 0x36;
+                opad[i] = kb ^ 0x5c;
+            }
+            ipad.set(msgBytes, 64);
+            opad.set(sha256Fallback(ipad), 64);
+            return sha256Fallback(opad);
+        }
+
+        function toHex(bytes) {
+            let out = '';
+            for (let i = 0; i < bytes.length; i++) out += (bytes[i] + 256).toString(16).slice(1);
+            return out;
+        }
+
+        const textEncoder = new TextEncoder();
+        const hasNative = typeof crypto !== 'undefined' && !!crypto.subtle && typeof crypto.subtle.digest === 'function';
+
+        async function sha256(bytes) {
+            if (hasNative) return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+            return sha256Fallback(bytes);
+        }
+
+        async function hmacSha256(secret, message) {
+            const keyBytes = textEncoder.encode(secret);
+            const msgBytes = textEncoder.encode(message);
+            if (hasNative) {
+                const key = await crypto.subtle.importKey('raw', keyBytes, {
+                    name: 'HMAC',
+                    hash: 'SHA-256'
+                }, false, ['sign']);
+                return new Uint8Array(await crypto.subtle.sign('HMAC', key, msgBytes));
+            }
+            return hmacFallback(keyBytes, msgBytes);
+        }
+
+        // entries: [{ name, bytes }]. Hasil: { manifest, json }.
+        async function buildManifest(entries, secret, onStep) {
+            const step = onStep || function() {};
+
+            step('hash');
+            const first = [];
+            for (const entry of entries) first.push(toHex(await sha256(entry.bytes)));
+
+            step('double');
+            const manifest = {};
+            for (let i = 0; i < entries.length; i++) {
+                manifest[entries[i].name] = toHex(await sha256(textEncoder.encode(first[i])));
+            }
+
+            step('sign');
+            manifest.key = toHex(await hmacSha256(secret, JSON.stringify(manifest)));
+
+            return {
+                manifest: manifest,
+                json: JSON.stringify(manifest, null, 2)
+            };
+        }
+        /* crypto-core:end */
+
+        /* ---------- 3D GALAXY & CONVERGENCE ENGINE ---------- */
+
+        const galaxy = {
+            canvas: document.getElementById('galaxyCanvas'),
+            enterBtn: document.getElementById('enterTerminalBtn'),
+            backBtn: document.getElementById('backToGalaxyBtn'),
+            docked: false,
+            warpSpeed: 0,
+            targetWarp: 0,
+            pointerX: 0,
+            pointerY: 0,
+            stars: []
+        };
+
+        (function initGalaxyEngine() {
+            const ctx = galaxy.canvas.getContext('2d');
+            let width = 0;
+            let height = 0;
+            let cx = 0;
+            let cy = 0;
+            const STAR_COUNT = 850;
+            const ARMS = 3;
+
+            function resize() {
+                width = galaxy.canvas.width = window.innerWidth;
+                height = galaxy.canvas.height = window.innerHeight;
+                cx = width / 2;
+                cy = height / 2;
+            }
+
+            function createStars() {
+                galaxy.stars = [];
+                for (let i = 0; i < STAR_COUNT; i++) {
+                    const dist = Math.pow(Math.random(), 0.75) * 900 + 20;
+                    const armIndex = i % ARMS;
+                    const armOffset = (armIndex / ARMS) * Math.PI * 2;
+                    const spin = dist * 0.0045;
+                    const scatter = (Math.random() - 0.5) * 0.85;
+                    const angle = armOffset + spin + scatter;
+
+                    const palette = ['#38bdf8', '#818cf8', '#e2e8f0', '#6ee7b7', '#f8fafc'];
+                    galaxy.stars.push({
+                        radius: dist,
+                        angle: angle,
+                        yOffset: (Math.random() - 0.5) * 180 * (1 - dist / 1100),
+                        z: Math.random() * 1200 + 100,
+                        size: Math.random() * 1.9 + 0.5,
+                        color: palette[i % palette.length],
+                        speed: (0.0006 + (1 / (dist + 120)) * 0.25)
+                    });
+                }
+            }
+
+            resize();
+            createStars();
+            window.addEventListener('resize', resize);
+
+            window.addEventListener('pointermove', function(e) {
+                galaxy.pointerX = (e.clientX / width - 0.5) * 2;
+                galaxy.pointerY = (e.clientY / height - 0.5) * 2;
+            });
+
+            function setDockedState(docked) {
+                if (galaxy.docked === docked) return;
+                galaxy.docked = docked;
+                galaxy.targetWarp = docked ? 1 : 0;
+                document.body.classList.toggle('is-docked', docked);
+                if (docked) {
+                    logKernel('Modul terminal terhubung. Mesin SHA-256 siap.');
+                }
+            }
+
+            // Trigger convergence via mouse wheel, touch swipe, or button click
+            let wheelAccumulator = 0;
+            window.addEventListener('wheel', function(e) {
+                if (!galaxy.docked) {
+                    if (e.deltaY > 0) {
+                        wheelAccumulator += e.deltaY;
+                        if (wheelAccumulator > 45) {
+                            setDockedState(true);
+                            wheelAccumulator = 0;
+                        }
+                    }
+                } else if (window.scrollY <= 0 && e.deltaY < -95) {
+                    setDockedState(false);
+                }
+            }, {
+                passive: true
+            });
+
+            let touchStartY = null;
+            window.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 1) touchStartY = e.touches[0].clientY;
+            }, {
+                passive: true
+            });
+
+            window.addEventListener('touchmove', function(e) {
+                if (touchStartY === null) return;
+                const dy = touchStartY - e.touches[0].clientY;
+                if (!galaxy.docked && dy > 35) {
+                    setDockedState(true);
+                    touchStartY = null;
+                }
+            }, {
+                passive: true
+            });
+
+            galaxy.enterBtn.addEventListener('click', function() {
+                setDockedState(true);
+            });
+
+            galaxy.backBtn.addEventListener('click', function() {
+                setDockedState(false);
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            window.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && galaxy.docked) {
+                    setDockedState(false);
+                }
+            });
+
+            function renderGalaxy() {
+                galaxy.warpSpeed += (galaxy.targetWarp - galaxy.warpSpeed) * 0.06;
+
+                ctx.fillStyle = 'rgba(5, 7, 10, 0.34)';
+                ctx.fillRect(0, 0, width, height);
+
+                // Subtle galactic core glow
+                const coreGrad = ctx.createRadialGradient(cx, cy, 4, cx, cy, Math.min(width, height) * 0.48);
+                coreGrad.addColorStop(0, 'rgba(56, 189, 248, 0.14)');
+                coreGrad.addColorStop(0.45, 'rgba(99, 102, 241, 0.05)');
+                coreGrad.addColorStop(1, 'rgba(5, 7, 10, 0)');
+                ctx.fillStyle = coreGrad;
+                ctx.fillRect(0, 0, width, height);
+
+                const tiltX = 0.58 + galaxy.pointerY * 0.15;
+                const tiltZ = galaxy.pointerX * 0.25;
+                const fov = 520 + galaxy.warpSpeed * 380;
+
+                for (let i = 0; i < galaxy.stars.length; i++) {
+                    const s = galaxy.stars[i];
+                    s.angle += s.speed * (1 + galaxy.warpSpeed * 6);
+                    s.z -= (0.8 + galaxy.warpSpeed * 28);
+                    if (s.z <= 20) s.z = 1200;
+
+                    const rawX = Math.cos(s.angle) * s.radius;
+                    const rawZ = Math.sin(s.angle) * s.radius;
+                    const rotY = s.yOffset * Math.cos(tiltX) - rawZ * Math.sin(tiltX);
+                    const rotZ = s.yOffset * Math.sin(tiltX) + rawZ * Math.cos(tiltX) + s.z;
+
+                    if (rotZ <= 10) continue;
+
+                    const scale = fov / rotZ;
+                    const sx = cx + (rawX * Math.cos(tiltZ) - rotY * Math.sin(tiltZ)) * scale;
+                    const sy = cy + (rawX * Math.sin(tiltZ) + rotY * Math.cos(tiltZ)) * scale;
+
+                    if (sx < 0 || sx > width || sy < 0 || sy > height) continue;
+
+                    const alpha = Math.min(1, (1200 - rotZ) / 700) * 0.9;
+                    const r = Math.max(0.4, s.size * scale * 0.65);
+
+                    ctx.beginPath();
+                    ctx.fillStyle = s.color;
+                    ctx.globalAlpha = Math.max(0.08, alpha);
+                    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+                requestAnimationFrame(renderGalaxy);
+            }
+
+            requestAnimationFrame(renderGalaxy);
+        })();
+
+        /* ---------- ANTARMUKA TERMINAL ---------- */
+
+        const els = {
+            drop: document.getElementById('dropzone'),
+            picker: document.getElementById('picker'),
+            fileList: document.getElementById('fileList'),
+            secret: document.getElementById('secret'),
+            toggleSecret: document.getElementById('toggleSecret'),
+            generate: document.getElementById('generate'),
+            reset: document.getElementById('reset'),
+            message: document.getElementById('message'),
+            steps: document.getElementById('steps'),
+            result: document.getElementById('result'),
+            kernelLog: document.getElementById('kernelLog'),
+            engineBadge: document.getElementById('engineBadge')
+        };
+
+        if (!hasNative) {
+            els.engineBadge.textContent = 'ENGINE::FALLBACK-JS';
+        }
+
+        const STEP_ORDER = ['read', 'hash', 'double', 'sign'];
+        const state = {
+            files: [],
+            downloadUrl: null
+        };
+
+        function logKernel(text) {
+            if (els.kernelLog) els.kernelLog.textContent = text;
+        }
+
+        function h(tag, className, text) {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text != null) node.textContent = text;
+            return node;
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+        }
+
+        function chunk(hex, size) {
+            const parts = [];
+            for (let i = 0; i < hex.length; i += size) parts.push(hex.slice(i, i + size));
+            return parts.join(' ');
+        }
+
+        function readBytes(file) {
+            if (typeof file.arrayBuffer === 'function') {
+                return file.arrayBuffer().then(function(buf) {
+                    return new Uint8Array(buf);
+                });
+            }
+            return new Promise(function(resolve, reject) {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    resolve(new Uint8Array(reader.result));
+                };
+                reader.onerror = function() {
+                    reject(reader.error || new Error('File tidak bisa dibaca.'));
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function showMessage(text, isError) {
+            if (!text) {
+                els.message.hidden = true;
+                els.message.textContent = '';
+                els.message.classList.remove('is-error');
+                return;
+            }
+            els.message.textContent = text;
+            els.message.classList.toggle('is-error', !!isError);
+            els.message.hidden = false;
+            logKernel(text);
+        }
+
+        /* langkah proses */
+
+        function setSteps(activeStep) {
+            const index = STEP_ORDER.indexOf(activeStep);
+            els.steps.hidden = false;
+            els.steps.querySelectorAll('li').forEach(function(li) {
+                const i = STEP_ORDER.indexOf(li.dataset.step);
+                li.dataset.state = i < index ? 'done' : i === index ? 'active' : 'pending';
+            });
+        }
+
+        function finishSteps() {
+            els.steps.querySelectorAll('li').forEach(function(li) {
+                li.dataset.state = 'done';
+            });
+        }
+
+        function failSteps() {
+            let marked = false;
+            els.steps.querySelectorAll('li').forEach(function(li) {
+                if (!marked && li.dataset.state === 'active') {
+                    li.dataset.state = 'error';
+                    marked = true;
+                }
+            });
+        }
+
+        function hideSteps() {
+            els.steps.hidden = true;
+            els.steps.querySelectorAll('li').forEach(function(li) {
+                li.dataset.state = 'pending';
+            });
+        }
+
+        /* daftar file */
+
+        function renderFiles() {
+            els.fileList.textContent = '';
+            state.files.forEach(function(file, index) {
+                const li = h('li');
+                li.appendChild(h('span', 'file-name', file.name));
+                li.appendChild(h('span', 'file-size', formatSize(file.size)));
+                const remove = h('button', 'link-btn', 'Hapus');
+                remove.type = 'button';
+                remove.setAttribute('aria-label', 'Hapus ' + file.name);
+                remove.addEventListener('click', function() {
+                    state.files.splice(index, 1);
+                    invalidateResult();
+                    renderFiles();
+                    logKernel('File dihapus dari buffer: ' + file.name);
+                });
+                li.appendChild(remove);
+                els.fileList.appendChild(li);
+            });
+        }
+
+        function addFiles(list) {
+            const problems = [];
+            let added = false;
+            Array.prototype.forEach.call(list, function(file) {
+                if (!/\.(js|mjs|cjs)$/i.test(file.name)) {
+                    problems.push(file.name + ' dilewati karena bukan file .js, .mjs, atau .cjs.');
+                } else if (file.name === 'key') {
+                    problems.push('Nama file "key" dipakai untuk tanda tangan, ganti dulu namanya.');
+                } else if (state.files.some(function(f) {
+                        return f.name === file.name;
+                    })) {
+                    problems.push(file.name + ' sudah ada di daftar.');
+                } else {
+                    state.files.push(file);
+                    added = true;
+                }
+            });
+            if (added) {
+                invalidateResult();
+                logKernel(state.files.length + ' file siap di dalam buffer.');
+            }
+            renderFiles();
+            showMessage(problems.join(' '), problems.length > 0);
+        }
+
+        /* hasil */
+
+        function renderEmpty() {
+            const slip = h('article', 'slip slip-empty');
+            const head = h('header', 'slip-head');
+            head.appendChild(h('h2', null, 'Manifest'));
+            head.appendChild(h('p', 'slip-meta', 'Belum ada hasil'));
+            const body = h('div', 'slip-body');
+            body.appendChild(h('p', null, 'Pilih file di sebelah kiri, lalu tekan Buat .datakeys. Hash dan tanda tangannya muncul di sini.'));
+            body.appendChild(h('span', 'ghost'));
+            body.appendChild(h('span', 'ghost'));
+            body.appendChild(h('span', 'ghost'));
+            slip.appendChild(head);
+            slip.appendChild(body);
+            els.result.textContent = '';
+            els.result.appendChild(slip);
+        }
+
+        function releaseDownload() {
+            if (state.downloadUrl) {
+                URL.revokeObjectURL(state.downloadUrl);
+                state.downloadUrl = null;
+            }
+        }
+
+        function invalidateResult() {
+            releaseDownload();
+            hideSteps();
+            renderEmpty();
+        }
+
+        function copyText(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text);
+            }
+            return new Promise(function(resolve, reject) {
+                const area = document.createElement('textarea');
+                area.value = text;
+                area.setAttribute('readonly', '');
+                area.style.position = 'fixed';
+                area.style.opacity = '0';
+                document.body.appendChild(area);
+                area.select();
+                let ok = false;
+                try {
+                    ok = document.execCommand('copy');
+                } catch (err) {
+                    ok = false;
+                }
+                document.body.removeChild(area);
+                if (ok) resolve();
+                else reject(new Error('Salin gagal'));
+            });
+        }
+
+        function makeCopyButton(label, getText) {
+            const btn = h('button', label.className, label.text);
+            btn.type = 'button';
+            let timer = null;
+            btn.addEventListener('click', function() {
+                copyText(getText()).then(function() {
+                    btn.textContent = 'Tersalin';
+                    logKernel('Data berhasil disalin ke clipboard.');
+                }, function() {
+                    btn.textContent = 'Gagal menyalin';
+                }).then(function() {
+                    clearTimeout(timer);
+                    timer = setTimeout(function() {
+                        btn.textContent = label.text;
+                    }, 1600);
+                });
+            });
+            return btn;
+        }
+
+        function renderResult(res, count) {
+            releaseDownload();
+
+            const slip = h('article', 'slip');
+            const head = h('header', 'slip-head');
+            head.appendChild(h('h2', null, 'Manifest'));
+            head.appendChild(h('p', 'slip-meta', count + ' file, ditandatangani dengan HMAC-SHA256'));
+            const body = h('div', 'slip-body');
+
+            Object.keys(res.manifest).forEach(function(name) {
+                const value = res.manifest[name];
+                const entry = h('div', 'entry');
+                const top = h('div', 'entry-top');
+                const nameEl = h('span', name === 'key' ? 'entry-name is-key-sig' : 'entry-name', name === 'key' ? 'key (HMAC Signature)' : name);
+                top.appendChild(nameEl);
+                top.appendChild(makeCopyButton({
+                    text: 'Salin',
+                    className: 'link-btn'
+                }, function() {
+                    return value;
+                }));
+                entry.appendChild(top);
+                entry.appendChild(h('code', 'hash', chunk(value, 8)));
+                body.appendChild(entry);
+            });
+
+            slip.appendChild(head);
+            slip.appendChild(body);
+
+            const blob = new Blob([res.json], {
+                type: 'application/json'
+            });
+            state.downloadUrl = URL.createObjectURL(blob);
+
+            const actions = h('div', 'actions');
+            const download = h('a', 'btn btn-primary', 'Unduh .datakeys');
+            download.href = state.downloadUrl;
+            download.download = '.datakeys';
+            actions.appendChild(download);
+            actions.appendChild(makeCopyButton({
+                text: 'Salin JSON',
+                className: 'btn btn-secondary'
+            }, function() {
+                return res.json;
+            }));
+
+            const details = h('details', 'json-view');
+            details.appendChild(h('summary', null, 'Lihat isi file (.datakeys JSON)'));
+            details.appendChild(h('pre', null, res.json));
+
+            els.result.textContent = '';
+            els.result.appendChild(slip);
+            els.result.appendChild(actions);
+            els.result.appendChild(details);
+        }
+
+        /* aksi */
+
+        async function onGenerate() {
+            showMessage('');
+            if (state.files.length === 0) {
+                hideSteps();
+                showMessage('Pilih minimal satu file dulu.', true);
+                return;
+            }
+
+            const secret = els.secret.value.trim() || DEFAULT_SECRET;
+            const started = performance.now();
+            els.generate.disabled = true;
+            els.generate.textContent = 'Memproses...';
+
+            try {
+                setSteps('read');
+                logKernel('Membaca byte stream dari ' + state.files.length + ' file...');
+                const entries = [];
+                for (const file of state.files) {
+                    entries.push({
+                        name: file.name,
+                        bytes: await readBytes(file)
+                    });
+                }
+
+                const res = await buildManifest(entries, secret, setSteps);
+                finishSteps();
+                renderResult(res, entries.length);
+
+                const elapsed = Math.max(1, Math.round(performance.now() - started));
+                let note = 'Selesai dalam ' + elapsed + ' ms.';
+                if (!hasNative) note += ' Dihitung dengan mode kompatibel karena halaman ini tidak dibuka lewat HTTPS.';
+                showMessage(note, false);
+            } catch (err) {
+                failSteps();
+                showMessage('Gagal membuat manifest: ' + (err && err.message ? err.message : String(err)), true);
+            } finally {
+                els.generate.disabled = false;
+                els.generate.textContent = 'Buat .datakeys';
+            }
+        }
+
+        function onReset() {
+            state.files = [];
+            els.secret.value = '';
+            els.picker.value = '';
+            renderFiles();
+            showMessage('');
+            invalidateResult();
+            logKernel('Buffer dan manifest di-reset.');
+        }
+
+        els.picker.addEventListener('change', function() {
+            addFiles(els.picker.files);
+            els.picker.value = '';
+        });
+
+        ['dragenter', 'dragover'].forEach(function(type) {
+            els.drop.addEventListener(type, function(event) {
+                event.preventDefault();
+                els.drop.classList.add('is-over');
+            });
+        });
+        ['dragleave', 'drop'].forEach(function(type) {
+            els.drop.addEventListener(type, function(event) {
+                event.preventDefault();
+                els.drop.classList.remove('is-over');
+            });
+        });
+        els.drop.addEventListener('drop', function(event) {
+            if (event.dataTransfer && event.dataTransfer.files) addFiles(event.dataTransfer.files);
+        });
+
+        els.toggleSecret.addEventListener('click', function() {
+            const show = els.secret.type === 'password';
+            els.secret.type = show ? 'text' : 'password';
+            els.toggleSecret.textContent = show ? 'Sembunyikan' : 'Tampilkan';
+            els.toggleSecret.setAttribute('aria-pressed', String(show));
+        });
+
+        els.secret.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') onGenerate();
+        });
+        els.generate.addEventListener('click', onGenerate);
+        els.reset.addEventListener('click', onReset);
+
+        renderEmpty();
+    </script>
+</body>
+
+</html>
